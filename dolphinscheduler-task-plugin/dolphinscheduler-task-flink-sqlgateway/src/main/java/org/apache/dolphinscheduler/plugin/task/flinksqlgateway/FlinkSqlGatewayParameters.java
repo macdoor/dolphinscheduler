@@ -15,7 +15,7 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
     /**
      * example: jdbc:flink://host:port
      */
-    private String jdbcUrl;
+    private String flinkJdbcUrl;
 
     /**
      * optional: username/password or other jdbc properties
@@ -56,7 +56,7 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
 
     @Override
     public boolean checkParameters() {
-        return StringUtils.isNotBlank(jdbcUrl) && StringUtils.isNotBlank(rawScript);
+        return StringUtils.isNotBlank(flinkJdbcUrl) && StringUtils.isNotBlank(rawScript);
     }
 
     @Override
@@ -64,12 +64,12 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
         return Collections.emptyList();
     }
 
-    public String getJdbcUrl() {
-        return jdbcUrl;
+    public String getFlinkJdbcUrl() {
+        return flinkJdbcUrl;
     }
 
-    public void setJdbcUrl(String jdbcUrl) {
-        this.jdbcUrl = jdbcUrl;
+    public void setFlinkJdbcUrl(String flinkJdbcUrl) {
+        this.flinkJdbcUrl = flinkJdbcUrl;
     }
 
     public Map<String, String> getJdbcProperties() {

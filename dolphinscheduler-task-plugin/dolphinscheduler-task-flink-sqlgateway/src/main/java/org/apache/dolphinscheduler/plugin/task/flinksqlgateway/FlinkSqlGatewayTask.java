@@ -49,9 +49,9 @@ public class FlinkSqlGatewayTask extends AbstractTask {
             if (paramsMap != null && !paramsMap.isEmpty()) {
                 Map<String, String> stringParams = ParameterUtils.convert(paramsMap);
 
-                if (StringUtils.isNotBlank(parameters.getJdbcUrl())) {
-                    parameters.setJdbcUrl(
-                            ParameterUtils.convertParameterPlaceholders(parameters.getJdbcUrl(), stringParams));
+                if (StringUtils.isNotBlank(parameters.getFlinkJdbcUrl())) {
+                    parameters.setFlinkJdbcUrl(
+                            ParameterUtils.convertParameterPlaceholders(parameters.getFlinkJdbcUrl(), stringParams));
                 }
                 if (StringUtils.isNotBlank(parameters.getInitScript())) {
                     parameters.setInitScript(
@@ -80,7 +80,7 @@ public class FlinkSqlGatewayTask extends AbstractTask {
     public void handle(TaskCallBack taskCallBack) throws TaskException {
         try {
             Properties props = parameters.toJdbcProperties();
-            connection = DriverManager.getConnection(parameters.getJdbcUrl(), props);
+            connection = DriverManager.getConnection(parameters.getFlinkJdbcUrl(), props);
             statement = connection.createStatement();
 
             executeScriptIfPresent(parameters.getInitScript(), "init");
