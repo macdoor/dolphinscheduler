@@ -97,8 +97,9 @@ export function useCellActive(options: Options) {
     let portAttrs = null
 
     if (isHover || isSelected) {
-      img = `${import.meta.env.BASE_URL}images/task-icons/${(node.data
-        .taskType !== 'FLINK_STREAM'
+      img = `${import.meta.env.BASE_URL}images/task-icons/${(
+        (node.data.taskType !== 'FLINK_STREAM' &&
+        node.data.taskType !== 'FLINK_SQLGATEWAY')
         ? node.data.taskType
         : 'FLINK'
       ).toLocaleLowerCase()}_hover.png`
@@ -110,8 +111,9 @@ export function useCellActive(options: Options) {
         portAttrs = _.merge(portDefault, portSelected)
       }
     } else {
-      img = `${import.meta.env.BASE_URL}images/task-icons/${(node.data
-        .taskType !== 'FLINK_STREAM'
+      img = `${import.meta.env.BASE_URL}images/task-icons/${(
+        (node.data.taskType !== 'FLINK_STREAM' &&
+        node.data.taskType !== 'FLINK_SQLGATEWAY' )
         ? node.data.taskType
         : 'FLINK'
       ).toLocaleLowerCase()}.png`

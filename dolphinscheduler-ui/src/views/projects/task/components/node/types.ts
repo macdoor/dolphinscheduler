@@ -472,6 +472,9 @@ interface ITaskParams {
   yarnQueue?: string
   awsRegion?: string
   kubeConfig?: string
+  flinkJdbcUrl?:string
+  statementSeparator?: string
+  maxPrintRows?: number
 }
 
 interface INodeData

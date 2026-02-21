@@ -90,6 +90,11 @@ export function formatParams(data: INodeData): {
     taskParams.taskManager = data.taskManager
     taskParams.parallelism = data.parallelism
   }
+  if (data.taskType === 'FLINK_SQLGATEWAY') {
+    taskParams.flinkJdbcUrl = data.flinkJdbcUrl
+    taskParams.statementSeparator = data.statementSeparator
+    taskParams.maxPrintRows = data.maxPrintRows
+  }
   if (data.taskType === 'GRPC') {
     taskParams.url = data.url
     taskParams.grpcCredentialType = data.grpcCredentialType
