@@ -57,6 +57,7 @@ type TaskType =
   | 'DATA_FACTORY'
   | 'REMOTESHELL'
   | 'ALIYUN_SERVERLESS_SPARK'
+  | 'FLINK_SQLGATEWAY'
 
 type ProgramType = 'JAVA' | 'SCALA' | 'PYTHON'
 

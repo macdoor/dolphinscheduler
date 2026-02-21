@@ -51,6 +51,7 @@ export type TaskType =
   | 'DATA_FACTORY'
   | 'REMOTESHELL'
   | 'ALIYUN_SERVERLESS_SPARK'
+  | 'FLINK_SQLGATEWAY'
 
 export type TaskExecuteType = 'STREAM' | 'BATCH'
 
@@ -186,6 +187,11 @@ export const TASK_TYPES_MAP = {
   ALIYUN_SERVERLESS_SPARK: {
     alias: 'ALIYUN_SERVERLESS_SPARK',
     helperLinkDisable: true
+  },
+  FLINK_SQLGATEWAY: {
+    alias: 'FLINK_SQLGATEWAY',
+    helperLinkDisable: true,
+    taskExecuteType: 'BATCH'
   }
 } as {
   [key in TaskType]: {
