@@ -24,13 +24,18 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskConstants;
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
+import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
+import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -71,7 +76,8 @@ public class FlinkSqlGatewayTask extends AbstractTask {
             if (StringUtils.isNotBlank(parameters.getInitScript())) {
                 parameters.setInitScript(ParameterUtils.convertParameterPlaceholders(parameters.getInitScript(), stringParams));
             }
-            if (StringUtils.isNotBlank(parameters.getRawScript())) {
+            if (FlinkSqlGatewayParameters.RAW_SCRIPT_TYPE_SCRIPT.equals(parameters.getRawScriptType())
+                    && StringUtils.isNotBlank(parameters.getRawScript())) {
                 parameters.setRawScript(ParameterUtils.convertParameterPlaceholders(parameters.getRawScript(), stringParams));
             }
         }
@@ -96,7 +102,8 @@ public class FlinkSqlGatewayTask extends AbstractTask {
             statement = connection.createStatement();
 
             executeScriptIfPresent(parameters.getInitScript(), "init");
-            executeScriptIfPresent(parameters.getRawScript(), "main");
+            String mainScript = resolveMainScriptContent();
+            executeScriptIfPresent(mainScript, "main");
 
             setExitStatusCode(TaskConstants.EXIT_CODE_SUCCESS);
         } catch (Exception e) {
@@ -125,6 +132,21 @@ public class FlinkSqlGatewayTask extends AbstractTask {
             closeQuietly(statement);
             closeQuietly(connection);
         }
+    }
+
+    private String resolveMainScriptContent() throws Exception {
+        if (FlinkSqlGatewayParameters.RAW_SCRIPT_TYPE_FILE.equals(parameters.getRawScriptType())) {
+                List<ResourceInfo> resourceList = parameters.getResourceList();
+            if (resourceList != null && !resourceList.isEmpty()) {
+                String resourceName = resourceList.get(0).getResourceName();
+                ResourceContext resourceContext = taskExecutionContext.getResourceContext();
+                String localPath = resourceContext.getResourceItem(resourceName).getResourceAbsolutePathInLocal();
+                String content = FileUtils.readFileToString(new File(localPath), StandardCharsets.UTF_8);
+                Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+                return ParameterUtils.convertParameterPlaceholders(content, ParameterUtils.convert(paramsMap));
+            }
+        }
+        return parameters.getRawScript();
     }
 
     private void executeScriptIfPresent(String script, String tag) throws Exception {
