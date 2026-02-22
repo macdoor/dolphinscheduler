@@ -472,7 +472,8 @@ interface ITaskParams {
   yarnQueue?: string
   awsRegion?: string
   kubeConfig?: string
-  flinkJdbcUrl?:string
+  flinkJdbcUrl?: string
+  rawScriptType?: 'SCRIPT' | 'FILE'
   statementSeparator?: string
   maxPrintRows?: number
 }

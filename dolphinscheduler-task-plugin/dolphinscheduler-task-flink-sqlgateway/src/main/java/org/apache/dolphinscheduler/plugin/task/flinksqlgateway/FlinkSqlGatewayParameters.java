@@ -20,6 +20,7 @@ package org.apache.dolphinscheduler.plugin.task.flinksqlgateway;
 import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
@@ -28,6 +29,11 @@ import java.util.Map;
 import java.util.Properties;
 
 public class FlinkSqlGatewayParameters extends AbstractParameters {
+
+    /** Main script from inline SQL string */
+    public static final String RAW_SCRIPT_TYPE_SCRIPT = "SCRIPT";
+    /** Main script from resource center file */
+    public static final String RAW_SCRIPT_TYPE_FILE = "FILE";
 
     /**
      * example: jdbc:flink://host:port
@@ -45,9 +51,19 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
     private String initScript;
 
     /**
-     * main sql script, required
+     * main script type: SCRIPT = inline sql string, FILE = resource center file
+     */
+    private String rawScriptType = RAW_SCRIPT_TYPE_SCRIPT;
+
+    /**
+     * main sql script (when rawScriptType=SCRIPT), or read-only display content (when rawScriptType=FILE)
      */
     private String rawScript;
+
+    /**
+     * resource list for main script file (when rawScriptType=FILE), size 1
+     */
+    private List<ResourceInfo> resourceList;
 
     /**
      * default: ;
@@ -73,11 +89,20 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
 
     @Override
     public boolean checkParameters() {
-        return StringUtils.isNotBlank(flinkJdbcUrl) && StringUtils.isNotBlank(rawScript);
+        if (StringUtils.isBlank(flinkJdbcUrl)) {
+            return false;
+        }
+        if (RAW_SCRIPT_TYPE_FILE.equals(rawScriptType)) {
+            return CollectionUtils.isNotEmpty(resourceList) && resourceList.size() >= 1;
+        }
+        return RAW_SCRIPT_TYPE_SCRIPT.equals(rawScriptType) && StringUtils.isNotBlank(rawScript);
     }
 
     @Override
     public List<ResourceInfo> getResourceFilesList() {
+        if (RAW_SCRIPT_TYPE_FILE.equals(rawScriptType) && CollectionUtils.isNotEmpty(resourceList)) {
+            return resourceList;
+        }
         return Collections.emptyList();
     }
 
@@ -105,12 +130,28 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
         this.initScript = initScript;
     }
 
+    public String getRawScriptType() {
+        return rawScriptType;
+    }
+
+    public void setRawScriptType(String rawScriptType) {
+        this.rawScriptType = rawScriptType;
+    }
+
     public String getRawScript() {
         return rawScript;
     }
 
     public void setRawScript(String rawScript) {
         this.rawScript = rawScript;
+    }
+
+    public List<ResourceInfo> getResourceList() {
+        return resourceList;
+    }
+
+    public void setResourceList(List<ResourceInfo> resourceList) {
+        this.resourceList = resourceList;
     }
 
     public String getStatementSeparator() {

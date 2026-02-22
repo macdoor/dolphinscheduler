@@ -94,6 +94,9 @@ export function formatParams(data: INodeData): {
     taskParams.flinkJdbcUrl = data.flinkJdbcUrl
     taskParams.statementSeparator = data.statementSeparator
     taskParams.maxPrintRows = data.maxPrintRows
+    taskParams.rawScriptType = data.rawScriptType
+    taskParams.initScript = data.initScript
+    taskParams.rawScript = data.rawScript
   }
   if (data.taskType === 'GRPC') {
     taskParams.url = data.url
