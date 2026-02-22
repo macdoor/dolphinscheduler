@@ -17,6 +17,7 @@
 
 import {
   defineComponent,
+  isRef,
   onMounted,
   onUnmounted,
   PropType,
@@ -92,13 +93,18 @@ export default defineComponent({
     const editorRef = ref()
     const getValue = () => editor?.getValue()
     const formItem = useFormItem({})
+    const getReadOnly = () =>
+      formItem.mergedDisabledRef.value ||
+      (isRef(props.options?.readOnly)
+        ? (props.options as any).readOnly.value
+        : props.options?.readOnly)
 
     const initMonacoEditor = () => {
       const dom = editorRef.value
       if (dom) {
         editor = monaco.editor.create(dom, {
           ...props.options,
-          readOnly: formItem.mergedDisabledRef.value || props.options?.readOnly,
+          readOnly: getReadOnly(),
           value: props.defaultValue ?? props.value,
           automaticLayout: true,
           theme: monacoEditorThemeRef.value,
@@ -147,6 +153,16 @@ export default defineComponent({
       () => formItem.mergedDisabledRef.value,
       (value) => {
         editor?.updateOptions({ readOnly: value })
+      }
+    )
+
+    watch(
+      () =>
+        isRef(props.options?.readOnly)
+          ? (props.options as any).readOnly.value
+          : props.options?.readOnly,
+      (readOnly) => {
+        editor?.updateOptions({ readOnly: !!readOnly })
       }
     )
 
