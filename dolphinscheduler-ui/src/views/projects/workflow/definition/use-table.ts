@@ -348,7 +348,14 @@ export function useTable() {
     }
 
     batchExportByCodes(data, variables.projectCode).then((res: any) => {
-      downloadBlob(res, fileName)
+      const raw = res?.data ?? res
+      const blob =
+        raw instanceof Blob
+          ? raw
+          : raw != null
+            ? new Blob([JSON.stringify(raw)], { type: 'application/json' })
+            : null
+      if (blob) downloadBlob(blob, fileName)
       window.$message.success(t('project.workflow.success'))
       variables.checkedRowKeys = []
     })
@@ -515,7 +522,7 @@ export function useTable() {
     if (!data) {
       return
     }
-    const blob = new Blob([data])
+    const blob = data instanceof Blob ? data : new Blob([typeof data === 'string' ? data : JSON.stringify(data)])
     const fileName = `${fileNameS}.json`
     if ('download' in document.createElement('a')) {
       // Not IE
@@ -543,7 +550,14 @@ export function useTable() {
       codes: String(row.code)
     }
     batchExportByCodes(data, variables.projectCode).then((res: any) => {
-      downloadBlob(res, fileName)
+      const raw = res?.data ?? res
+      const blob =
+        raw instanceof Blob
+          ? raw
+          : raw != null
+            ? new Blob([JSON.stringify(raw)], { type: 'application/json' })
+            : null
+      if (blob) downloadBlob(blob, fileName)
     })
   }
 
