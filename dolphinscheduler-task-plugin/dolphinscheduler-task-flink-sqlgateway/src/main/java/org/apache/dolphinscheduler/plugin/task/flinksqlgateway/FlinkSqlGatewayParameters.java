@@ -48,7 +48,7 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
     /**
      * init script type: SCRIPT = inline sql string, FILE = resource center file
      */
-    private String initScriptType = SCRIPT_SOURCE_SCRIPT;
+    private String initScriptType = SCRIPT_SOURCE_FILE;
 
     /**
      * optional init sql script (when initScriptType=SCRIPT), or read-only display (when FILE)
@@ -63,7 +63,7 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
     /**
      * main script type: SCRIPT = inline sql string, FILE = resource center file
      */
-    private String rawScriptType = SCRIPT_SOURCE_SCRIPT;
+    private String rawScriptType = SCRIPT_SOURCE_FILE;
 
     /**
      * main sql script (when rawScriptType=SCRIPT), or read-only display content (when rawScriptType=FILE)
