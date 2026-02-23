@@ -20,9 +20,9 @@ export function useFlinkSqlGateway(model: { [field: string]: any }): IJsonItem[]
   if (!model.maxPrintRows) model.maxPrintRows = 0
   if (!model.initScript) model.initScript = ''
   if (!model.rawScript) model.rawScript = ''
-  if (!model.rawScriptType) model.rawScriptType = SCRIPT_SOURCE_SCRIPT
+  if (!model.rawScriptType) model.rawScriptType = SCRIPT_SOURCE_FILE
   if (!model.resourceList) model.resourceList = []
-  if (!model.initScriptType) model.initScriptType = SCRIPT_SOURCE_SCRIPT
+  if (!model.initScriptType) model.initScriptType = SCRIPT_SOURCE_FILE
   if (!model.initScriptResourceList) model.initScriptResourceList = []
 
   const initResourceContentLoading = ref(false)
