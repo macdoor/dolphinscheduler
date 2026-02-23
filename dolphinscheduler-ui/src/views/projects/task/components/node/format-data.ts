@@ -95,6 +95,7 @@ export function formatParams(data: INodeData): {
     taskParams.statementSeparator = data.statementSeparator
     taskParams.maxPrintRows = data.maxPrintRows
     taskParams.rawScriptType = data.rawScriptType
+    taskParams.initScriptType = data.initScriptType
     taskParams.initScript = data.initScript
     taskParams.rawScript = data.rawScript
   }
@@ -512,6 +513,13 @@ export function formatParams(data: INodeData): {
               resourceName: `${fullName}`
             }))
           : [],
+        initScriptType: data.initScriptType,
+        initScriptResourceList:
+          (data.initScriptResourceList as string[] | undefined)?.length
+            ? (data.initScriptResourceList as string[]).map((fullName) => ({
+                resourceName: `${fullName}`
+              }))
+            : [],
         ...taskParams
       },
       taskPriority: data.taskPriority,
@@ -544,7 +552,12 @@ export function formatModel(data: ITaskData) {
       'timeoutNotifyStrategy',
       'taskParams'
     ]),
-    ...omit(data.taskParams, ['resourceList', 'mainJar', 'localParams']),
+    ...omit(data.taskParams, [
+      'resourceList',
+      'mainJar',
+      'localParams',
+      'initScriptResourceList'
+    ]),
     environmentCode: data.environmentCode === -1 ? null : data.environmentCode,
     timeoutFlag: data.timeoutFlag === 'OPEN',
     timeoutNotifyStrategy: data.timeoutNotifyStrategy
@@ -560,6 +573,12 @@ export function formatModel(data: ITaskData) {
     params.resourceList = data.taskParams.resourceList.map(
       (item: { resourceName: string }) => `${item.resourceName}`
     )
+  }
+  if (data.taskParams?.initScriptResourceList) {
+    (params as INodeData).initScriptResourceList =
+      data.taskParams.initScriptResourceList.map(
+        (item: { resourceName: string }) => `${item.resourceName}`
+      )
   }
   if (data.taskParams?.mainJar) {
     params.mainJar = data.taskParams?.mainJar.resourceName
