@@ -24,6 +24,7 @@ import { useTextCopy } from '../components/dag/use-text-copy'
 import {
   batchCopyByCodes,
   batchDeleteByCodes,
+  batchExportByCodes,
   deleteByCode,
   queryListPaging,
   release
@@ -339,6 +340,26 @@ export function useTable() {
     })
   }
 
+  const batchExportWorkflow = () => {
+    const fileName = 'workflow_' + new Date().getTime()
+    const data = {
+      codes: _.join(variables.checkedRowKeys, ',')
+    }
+
+    batchExportByCodes(data, variables.projectCode).then((res: any) => {
+      const raw = res?.data ?? res
+      const blob =
+        raw instanceof Blob
+          ? raw
+          : raw != null
+            ? new Blob([JSON.stringify(raw)], { type: 'application/json' })
+            : null
+      if (blob) downloadBlob(blob, fileName)
+      window.$message.success(t('project.workflow.success'))
+      variables.checkedRowKeys = []
+    })
+  }
+
   const batchCopyWorkflow = () => {}
 
   const confirmToOfflineWorkflow = () => {
@@ -493,6 +514,49 @@ export function useTable() {
         pageNo: variables.page,
         searchVal: variables.searchVal
       })
+    })
+  }
+
+  const downloadBlob = (data: any, fileNameS = 'json') => {
+    if (!data) {
+      return
+    }
+    const blob = data instanceof Blob ? data : new Blob([typeof data === 'string' ? data : JSON.stringify(data)])
+    const fileName = `${fileNameS}.json`
+    if ('download' in document.createElement('a')) {
+      // Not IE
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.style.display = 'none'
+      link.href = url
+      link.setAttribute('download', fileName)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link) // remove element after downloading is complete.
+      window.URL.revokeObjectURL(url) // release blob object
+    } else {
+      // IE 10+
+      if (window.navigator.msSaveBlob) {
+        window.navigator.msSaveBlob(blob, fileName)
+      }
+    }
+  }
+
+  const exportWorkflow = (row: any) => {
+    const fileName = 'workflow_' + new Date().getTime()
+
+    const data = {
+      codes: String(row.code)
+    }
+    batchExportByCodes(data, variables.projectCode).then((res: any) => {
+      const raw = res?.data ?? res
+      const blob =
+        raw instanceof Blob
+          ? raw
+          : raw != null
+            ? new Blob([JSON.stringify(raw)], { type: 'application/json' })
+            : null
+      if (blob) downloadBlob(blob, fileName)
     })
   }
 

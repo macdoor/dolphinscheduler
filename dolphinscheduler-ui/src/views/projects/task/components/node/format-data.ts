@@ -96,8 +96,10 @@ export function formatParams(data: INodeData): {
     taskParams.maxPrintRows = data.maxPrintRows
     taskParams.rawScriptType = data.rawScriptType
     taskParams.initScriptType = data.initScriptType
-    taskParams.initScript = data.initScript
-    taskParams.rawScript = data.rawScript
+    taskParams.initScript =
+      data.initScriptType === 'FILE' ? '' : (data.initScript ?? '')
+    taskParams.rawScript =
+      data.rawScriptType === 'FILE' ? '' : (data.rawScript ?? '')
   }
   if (data.taskType === 'GRPC') {
     taskParams.url = data.url
@@ -506,8 +508,10 @@ export function formatParams(data: INodeData): {
           item.value = item.value || ''
           return item
         }),
-        initScript: data.initScript,
-        rawScript: data.rawScript,
+        initScript:
+          data.initScriptType === 'FILE' ? '' : (data.initScript ?? ''),
+        rawScript:
+          data.rawScriptType === 'FILE' ? '' : (data.rawScript ?? ''),
         resourceList: data.resourceList?.length
           ? data.resourceList.map((fullName: string) => ({
               resourceName: `${fullName}`
