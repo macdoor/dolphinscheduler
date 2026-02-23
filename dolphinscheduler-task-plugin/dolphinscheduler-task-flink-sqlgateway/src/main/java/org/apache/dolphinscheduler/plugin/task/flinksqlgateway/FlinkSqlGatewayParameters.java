@@ -30,10 +30,10 @@ import java.util.Properties;
 
 public class FlinkSqlGatewayParameters extends AbstractParameters {
 
-    /** Main script from inline SQL string */
-    public static final String RAW_SCRIPT_TYPE_SCRIPT = "SCRIPT";
-    /** Main script from resource center file */
-    public static final String RAW_SCRIPT_TYPE_FILE = "FILE";
+    /** Script source: inline SQL string (used for both main and init script) */
+    public static final String SCRIPT_SOURCE_SCRIPT = "SCRIPT";
+    /** Script source: resource center file (used for both main and init script) */
+    public static final String SCRIPT_SOURCE_FILE = "FILE";
 
     /**
      * example: jdbc:flink://host:port
@@ -46,14 +46,24 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
     private Map<String, String> jdbcProperties;
 
     /**
-     * optional init sql script
+     * init script type: SCRIPT = inline sql string, FILE = resource center file
+     */
+    private String initScriptType = SCRIPT_SOURCE_SCRIPT;
+
+    /**
+     * optional init sql script (when initScriptType=SCRIPT), or read-only display (when FILE)
      */
     private String initScript;
 
     /**
+     * resource list for init script file (when initScriptType=FILE), size 1
+     */
+    private List<ResourceInfo> initScriptResourceList;
+
+    /**
      * main script type: SCRIPT = inline sql string, FILE = resource center file
      */
-    private String rawScriptType = RAW_SCRIPT_TYPE_SCRIPT;
+    private String rawScriptType = SCRIPT_SOURCE_SCRIPT;
 
     /**
      * main sql script (when rawScriptType=SCRIPT), or read-only display content (when rawScriptType=FILE)
@@ -92,18 +102,26 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
         if (StringUtils.isBlank(flinkJdbcUrl)) {
             return false;
         }
-        if (RAW_SCRIPT_TYPE_FILE.equals(rawScriptType)) {
+        if (SCRIPT_SOURCE_FILE.equals(initScriptType)
+                && (CollectionUtils.isEmpty(initScriptResourceList) || initScriptResourceList.size() < 1)) {
+            return false;
+        }
+        if (SCRIPT_SOURCE_FILE.equals(rawScriptType)) {
             return CollectionUtils.isNotEmpty(resourceList) && resourceList.size() >= 1;
         }
-        return RAW_SCRIPT_TYPE_SCRIPT.equals(rawScriptType) && StringUtils.isNotBlank(rawScript);
+        return SCRIPT_SOURCE_SCRIPT.equals(rawScriptType) && StringUtils.isNotBlank(rawScript);
     }
 
     @Override
     public List<ResourceInfo> getResourceFilesList() {
-        if (RAW_SCRIPT_TYPE_FILE.equals(rawScriptType) && CollectionUtils.isNotEmpty(resourceList)) {
-            return resourceList;
+        List<ResourceInfo> list = new java.util.ArrayList<>();
+        if (SCRIPT_SOURCE_FILE.equals(initScriptType) && CollectionUtils.isNotEmpty(initScriptResourceList)) {
+            list.addAll(initScriptResourceList);
         }
-        return Collections.emptyList();
+        if (SCRIPT_SOURCE_FILE.equals(rawScriptType) && CollectionUtils.isNotEmpty(resourceList)) {
+            list.addAll(resourceList);
+        }
+        return list;
     }
 
     public String getFlinkJdbcUrl() {
@@ -122,12 +140,28 @@ public class FlinkSqlGatewayParameters extends AbstractParameters {
         this.jdbcProperties = jdbcProperties;
     }
 
+    public String getInitScriptType() {
+        return initScriptType;
+    }
+
+    public void setInitScriptType(String initScriptType) {
+        this.initScriptType = initScriptType;
+    }
+
     public String getInitScript() {
         return initScript;
     }
 
     public void setInitScript(String initScript) {
         this.initScript = initScript;
+    }
+
+    public List<ResourceInfo> getInitScriptResourceList() {
+        return initScriptResourceList;
+    }
+
+    public void setInitScriptResourceList(List<ResourceInfo> initScriptResourceList) {
+        this.initScriptResourceList = initScriptResourceList;
     }
 
     public String getRawScriptType() {

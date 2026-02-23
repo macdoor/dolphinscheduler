@@ -23,9 +23,11 @@ export function useFlinkSqlGateway(params: any) {
     // --- FLINK_SQLGATEWAY custom fields ---
     flinkJdbcUrl: 'jdbc:flink://host:port',
     rawScriptType: 'SCRIPT',
+    initScriptType: 'SCRIPT',
     initScript: '',
     rawScript: '',
     resourceList: [],
+    initScriptResourceList: [],
     statementSeparator: ';',
     maxPrintRows: 0,
     jdbcProperties: {}

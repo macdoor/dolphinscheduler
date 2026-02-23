@@ -474,6 +474,8 @@ interface ITaskParams {
   kubeConfig?: string
   flinkJdbcUrl?: string
   rawScriptType?: 'SCRIPT' | 'FILE'
+  initScriptType?: 'SCRIPT' | 'FILE'
+  initScriptResourceList?: ISourceItem[]
   statementSeparator?: string
   maxPrintRows?: number
 }
@@ -482,6 +484,7 @@ interface INodeData
   extends Omit<
       ITaskParams,
       | 'resourceList'
+      | 'initScriptResourceList'
       | 'mainJar'
       | 'targetParams'
       | 'sourceParams'
@@ -518,6 +521,7 @@ interface INodeData
   preTaskOptions?: []
   postTaskOptions?: []
   resourceList?: string[]
+  initScriptResourceList?: string[]
   mainJar?: string
   timeoutSetting?: boolean
   isCustomTask?: boolean

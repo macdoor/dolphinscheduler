@@ -5,8 +5,10 @@ import { viewResource } from '@/service/modules/resources'
 import { useUserStore } from '@/store/user/user'
 import type { IJsonItem } from '../types'
 
-const RAW_SCRIPT_TYPE_SCRIPT = 'SCRIPT'
-const RAW_SCRIPT_TYPE_FILE = 'FILE'
+/** Script source: inline input */
+const SCRIPT_SOURCE_SCRIPT = 'SCRIPT'
+/** Script source: resource center file */
+const SCRIPT_SOURCE_FILE = 'FILE'
 
 export function useFlinkSqlGateway(model: { [field: string]: any }): IJsonItem[] {
   const { t } = useI18n()
@@ -18,17 +20,25 @@ export function useFlinkSqlGateway(model: { [field: string]: any }): IJsonItem[]
   if (!model.maxPrintRows) model.maxPrintRows = 0
   if (!model.initScript) model.initScript = ''
   if (!model.rawScript) model.rawScript = ''
-  if (!model.rawScriptType) model.rawScriptType = RAW_SCRIPT_TYPE_SCRIPT
+  if (!model.rawScriptType) model.rawScriptType = SCRIPT_SOURCE_SCRIPT
   if (!model.resourceList) model.resourceList = []
+  if (!model.initScriptType) model.initScriptType = SCRIPT_SOURCE_SCRIPT
+  if (!model.initScriptResourceList) model.initScriptResourceList = []
 
-  const resourcesRequired = ref(model.rawScriptType === RAW_SCRIPT_TYPE_FILE)
+  const initResourceContentLoading = ref(false)
+  const resourcesRequired = ref(model.rawScriptType === SCRIPT_SOURCE_FILE)
+  const initResourcesRequired = ref(model.initScriptType === SCRIPT_SOURCE_FILE)
   const resourcesLimit = computed(() =>
-    model.rawScriptType === RAW_SCRIPT_TYPE_SCRIPT ? -1 : 1
+    model.rawScriptType === SCRIPT_SOURCE_SCRIPT ? -1 : 1
   )
   const resourcesSpan = computed(() =>
-    model.rawScriptType === RAW_SCRIPT_TYPE_FILE ? 24 : 0
+    model.rawScriptType === SCRIPT_SOURCE_FILE ? 24 : 0
   )
-  const scriptEditorReadonly = computed(() => model.rawScriptType === RAW_SCRIPT_TYPE_FILE)
+  const initResourcesSpan = computed(() =>
+    model.initScriptType === SCRIPT_SOURCE_FILE ? 24 : 0
+  )
+  const scriptEditorReadonly = computed(() => model.rawScriptType === SCRIPT_SOURCE_FILE)
+  const initScriptEditorReadonly = computed(() => model.initScriptType === SCRIPT_SOURCE_FILE)
 
   const loadResourceContent = (fullName: string) => {
     const tenantCode = (userStore.getUserInfo as any)?.tenantCode
@@ -54,11 +64,35 @@ export function useFlinkSqlGateway(model: { [field: string]: any }): IJsonItem[]
       })
   }
 
+  const loadInitResourceContent = (fullName: string) => {
+    const tenantCode = (userStore.getUserInfo as any)?.tenantCode
+    if (!tenantCode) {
+      model.initScript = ''
+      return
+    }
+    initResourceContentLoading.value = true
+    viewResource({
+      fullName,
+      tenantCode,
+      skipLineNum: 0,
+      limit: -1
+    })
+      .then((res: { content: string }) => {
+        model.initScript = res?.content ?? ''
+      })
+      .catch(() => {
+        model.initScript = ''
+      })
+      .finally(() => {
+        initResourceContentLoading.value = false
+      })
+  }
+
   watch(
     () => model.rawScriptType,
     () => {
-      resourcesRequired.value = model.rawScriptType === RAW_SCRIPT_TYPE_FILE
-      if (model.rawScriptType === RAW_SCRIPT_TYPE_SCRIPT) {
+      resourcesRequired.value = model.rawScriptType === SCRIPT_SOURCE_FILE
+      if (model.rawScriptType === SCRIPT_SOURCE_SCRIPT) {
         model.resourceList = []
       } else if (model.resourceList?.length === 1) {
         loadResourceContent(model.resourceList[0])
@@ -71,18 +105,44 @@ export function useFlinkSqlGateway(model: { [field: string]: any }): IJsonItem[]
   watch(
     () => model.resourceList,
     (list) => {
-      if (model.rawScriptType === RAW_SCRIPT_TYPE_FILE && list?.length === 1) {
+      if (model.rawScriptType === SCRIPT_SOURCE_FILE && list?.length === 1) {
         loadResourceContent(list[0])
-      } else if (model.rawScriptType === RAW_SCRIPT_TYPE_FILE) {
+      } else if (model.rawScriptType === SCRIPT_SOURCE_FILE) {
         model.rawScript = ''
       }
     },
     { deep: true, immediate: true }
   )
 
+  watch(
+    () => model.initScriptType,
+    () => {
+      initResourcesRequired.value = model.initScriptType === SCRIPT_SOURCE_FILE
+      if (model.initScriptType === SCRIPT_SOURCE_SCRIPT) {
+        model.initScriptResourceList = []
+      } else if (model.initScriptResourceList?.length === 1) {
+        loadInitResourceContent(model.initScriptResourceList[0])
+      } else {
+        model.initScript = ''
+      }
+    }
+  )
+
+  watch(
+    () => model.initScriptResourceList,
+    (list) => {
+      if (model.initScriptType === SCRIPT_SOURCE_FILE && list?.length === 1) {
+        loadInitResourceContent(list[0])
+      } else if (model.initScriptType === SCRIPT_SOURCE_FILE) {
+        model.initScript = ''
+      }
+    },
+    { deep: true, immediate: true }
+  )
+
   const SCRIPT_SOURCE_OPTIONS = [
-    { label: t('project.node.sql_execution_type_from_script'), value: RAW_SCRIPT_TYPE_SCRIPT },
-    { label: t('project.node.sql_execution_type_from_file'), value: RAW_SCRIPT_TYPE_FILE }
+    { label: t('project.node.sql_execution_type_from_script'), value: SCRIPT_SOURCE_SCRIPT },
+    { label: t('project.node.sql_execution_type_from_file'), value: SCRIPT_SOURCE_FILE }
   ]
 
   return [
@@ -112,11 +172,29 @@ export function useFlinkSqlGateway(model: { [field: string]: any }): IJsonItem[]
       value: model.maxPrintRows
     },
     {
+      type: 'select',
+      field: 'initScriptType',
+      span: 12,
+      name: t('project.node.init_script_source'),
+      options: SCRIPT_SOURCE_OPTIONS,
+      validate: { trigger: ['input', 'blur'], required: true }
+    },
+    useResources(
+      initResourcesSpan,
+      initResourcesRequired,
+      computed(() => (model.initScriptType === SCRIPT_SOURCE_FILE ? 1 : -1)),
+      'initScriptResourceList'
+    ),
+    {
       type: 'editor',
       field: 'initScript',
       span: 24,
       name: 'Init Script',
-      props: { language: 'sql' },
+      props: {
+        language: 'sql',
+        readOnly: initScriptEditorReadonly,
+        loading: initResourceContentLoading
+      },
       value: model.initScript
     },
     {
@@ -141,7 +219,7 @@ export function useFlinkSqlGateway(model: { [field: string]: any }): IJsonItem[]
       value: model.rawScript,
       validate: {
         trigger: ['blur', 'input'],
-        required: model.rawScriptType === RAW_SCRIPT_TYPE_SCRIPT
+        required: model.rawScriptType === SCRIPT_SOURCE_SCRIPT
       }
     },
     ...useCustomParams({

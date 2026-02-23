@@ -73,10 +73,11 @@ public class FlinkSqlGatewayTask extends AbstractTask {
             if (StringUtils.isNotBlank(parameters.getFlinkJdbcUrl())) {
                 parameters.setFlinkJdbcUrl(ParameterUtils.convertParameterPlaceholders(parameters.getFlinkJdbcUrl(), stringParams));
             }
-            if (StringUtils.isNotBlank(parameters.getInitScript())) {
+            if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_SCRIPT.equals(parameters.getInitScriptType())
+                    && StringUtils.isNotBlank(parameters.getInitScript())) {
                 parameters.setInitScript(ParameterUtils.convertParameterPlaceholders(parameters.getInitScript(), stringParams));
             }
-            if (FlinkSqlGatewayParameters.RAW_SCRIPT_TYPE_SCRIPT.equals(parameters.getRawScriptType())
+            if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_SCRIPT.equals(parameters.getRawScriptType())
                     && StringUtils.isNotBlank(parameters.getRawScript())) {
                 parameters.setRawScript(ParameterUtils.convertParameterPlaceholders(parameters.getRawScript(), stringParams));
             }
@@ -101,7 +102,7 @@ public class FlinkSqlGatewayTask extends AbstractTask {
             connection = DriverManager.getConnection(parameters.getFlinkJdbcUrl(), props);
             statement = connection.createStatement();
 
-            executeScriptIfPresent(parameters.getInitScript(), "init");
+            executeScriptIfPresent(resolveInitScriptContent(), "init");
             String mainScript = resolveMainScriptContent();
             executeScriptIfPresent(mainScript, "main");
 
@@ -134,8 +135,23 @@ public class FlinkSqlGatewayTask extends AbstractTask {
         }
     }
 
+    private String resolveInitScriptContent() throws Exception {
+        if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_FILE.equals(parameters.getInitScriptType())) {
+            List<ResourceInfo> initList = parameters.getInitScriptResourceList();
+            if (initList != null && !initList.isEmpty()) {
+                String resourceName = initList.get(0).getResourceName();
+                ResourceContext resourceContext = taskExecutionContext.getResourceContext();
+                String localPath = resourceContext.getResourceItem(resourceName).getResourceAbsolutePathInLocal();
+                String content = FileUtils.readFileToString(new File(localPath), StandardCharsets.UTF_8);
+                Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+                return ParameterUtils.convertParameterPlaceholders(content, ParameterUtils.convert(paramsMap));
+            }
+        }
+        return parameters.getInitScript();
+    }
+
     private String resolveMainScriptContent() throws Exception {
-        if (FlinkSqlGatewayParameters.RAW_SCRIPT_TYPE_FILE.equals(parameters.getRawScriptType())) {
+        if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_FILE.equals(parameters.getRawScriptType())) {
                 List<ResourceInfo> resourceList = parameters.getResourceList();
             if (resourceList != null && !resourceList.isEmpty()) {
                 String resourceName = resourceList.get(0).getResourceName();
@@ -156,7 +172,7 @@ public class FlinkSqlGatewayTask extends AbstractTask {
         List<String> sqlList = splitSql(script, parameters.getStatementSeparator());
         for (int i = 0; i < sqlList.size(); i++) {
             String sql = sqlList.get(i);
-            String trimmed = sql == null ? "" : sql.trim();
+            String trimmed = stripLeadingCommentsAndBlanks(sql == null ? "" : sql);
             if (trimmed.isEmpty()) {
                 continue;
             }
@@ -188,6 +204,28 @@ public class FlinkSqlGatewayTask extends AbstractTask {
         String sep = StringUtils.isBlank(separator) ? ";" : separator;
         return Arrays.stream(script.split(java.util.regex.Pattern.quote(sep)))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Strip leading line comments (-- ...) and blank lines so that Flink parser
+     * receives only the actual statement (e.g. SET pipeline.name='...').
+     */
+    private static String stripLeadingCommentsAndBlanks(String sql) {
+        if (sql == null) {
+            return "";
+        }
+        String[] lines = sql.split("\n");
+        int start = 0;
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+            String trimmed = line.trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("--")) {
+                continue;
+            }
+            start = i;
+            break;
+        }
+        return String.join("\n", Arrays.copyOfRange(lines, start, lines.length)).trim();
     }
 
     private static void closeQuietly(AutoCloseable c) {
