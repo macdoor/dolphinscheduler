@@ -65,24 +65,6 @@ public class FlinkSqlGatewayTask extends AbstractTask {
         parameters =
                 JSONUtils.parseObject(taskExecutionContext.getTaskParams(), FlinkSqlGatewayParameters.class);
 
-        // Replace parameter placeholders (e.g. ${system.biz.date}, $[yyyyMMdd]); empty params still allow time placeholders
-        if (parameters != null) {
-            Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
-            Map<String, String> stringParams = ParameterUtils.convert(paramsMap);
-
-            if (StringUtils.isNotBlank(parameters.getFlinkJdbcUrl())) {
-                parameters.setFlinkJdbcUrl(ParameterUtils.convertParameterPlaceholders(parameters.getFlinkJdbcUrl(), stringParams));
-            }
-            if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_SCRIPT.equals(parameters.getInitScriptType())
-                    && StringUtils.isNotBlank(parameters.getInitScript())) {
-                parameters.setInitScript(ParameterUtils.convertParameterPlaceholders(parameters.getInitScript(), stringParams));
-            }
-            if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_SCRIPT.equals(parameters.getRawScriptType())
-                    && StringUtils.isNotBlank(parameters.getRawScript())) {
-                parameters.setRawScript(ParameterUtils.convertParameterPlaceholders(parameters.getRawScript(), stringParams));
-            }
-        }
-
         log.info("Initialize flink sqlgateway task params {}", JSONUtils.toPrettyJsonString(parameters));
 
         if (parameters == null || !parameters.checkParameters()) {
@@ -98,8 +80,9 @@ public class FlinkSqlGatewayTask extends AbstractTask {
     @Override
     public void handle(TaskCallBack taskCallBack) throws TaskException {
         try {
+            String jdbcUrl = resolveFlinkJdbcUrl();
             Properties props = parameters.toJdbcProperties();
-            connection = DriverManager.getConnection(parameters.getFlinkJdbcUrl(), props);
+            connection = DriverManager.getConnection(jdbcUrl, props);
             statement = connection.createStatement();
 
             executeScriptIfPresent(resolveInitScriptContent(), "init");
@@ -135,7 +118,16 @@ public class FlinkSqlGatewayTask extends AbstractTask {
         }
     }
 
+    private String resolveFlinkJdbcUrl() {
+        Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+        Map<String, String> stringParams = ParameterUtils.convert(paramsMap);
+        return ParameterUtils.convertParameterPlaceholders(parameters.getFlinkJdbcUrl(), stringParams);
+    }
+
     private String resolveInitScriptContent() throws Exception {
+        Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+        Map<String, String> stringParams = ParameterUtils.convert(paramsMap);
+
         if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_FILE.equals(parameters.getInitScriptType())) {
             List<ResourceInfo> initList = parameters.getInitScriptResourceList();
             if (initList != null && !initList.isEmpty()) {
@@ -143,24 +135,33 @@ public class FlinkSqlGatewayTask extends AbstractTask {
                 ResourceContext resourceContext = taskExecutionContext.getResourceContext();
                 String localPath = resourceContext.getResourceItem(resourceName).getResourceAbsolutePathInLocal();
                 String content = FileUtils.readFileToString(new File(localPath), StandardCharsets.UTF_8);
-                Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
-                return ParameterUtils.convertParameterPlaceholders(content, ParameterUtils.convert(paramsMap));
+                return ParameterUtils.convertParameterPlaceholders(content, stringParams);
             }
+        }
+        if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_SCRIPT.equals(parameters.getInitScriptType())
+                && StringUtils.isNotBlank(parameters.getInitScript())) {
+            return ParameterUtils.convertParameterPlaceholders(parameters.getInitScript(), stringParams);
         }
         return parameters.getInitScript();
     }
 
     private String resolveMainScriptContent() throws Exception {
+        Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+        Map<String, String> stringParams = ParameterUtils.convert(paramsMap);
+
         if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_FILE.equals(parameters.getRawScriptType())) {
-                List<ResourceInfo> resourceList = parameters.getResourceList();
+            List<ResourceInfo> resourceList = parameters.getResourceList();
             if (resourceList != null && !resourceList.isEmpty()) {
                 String resourceName = resourceList.get(0).getResourceName();
                 ResourceContext resourceContext = taskExecutionContext.getResourceContext();
                 String localPath = resourceContext.getResourceItem(resourceName).getResourceAbsolutePathInLocal();
                 String content = FileUtils.readFileToString(new File(localPath), StandardCharsets.UTF_8);
-                Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
-                return ParameterUtils.convertParameterPlaceholders(content, ParameterUtils.convert(paramsMap));
+                return ParameterUtils.convertParameterPlaceholders(content, stringParams);
             }
+        }
+        if (FlinkSqlGatewayParameters.SCRIPT_SOURCE_SCRIPT.equals(parameters.getRawScriptType())
+                && StringUtils.isNotBlank(parameters.getRawScript())) {
+            return ParameterUtils.convertParameterPlaceholders(parameters.getRawScript(), stringParams);
         }
         return parameters.getRawScript();
     }
