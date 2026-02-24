@@ -44,8 +44,8 @@ export const TASK_TYPES_MAP = {
   FLINK: {
     alias: 'FLINK'
   },
-  FLINK_SQLGATEWAY: {
-    alias: 'FLINK_SQLGATEWAY'
+  FLINK_SGW: {
+    alias: 'FLINK_SGW'
   },
   MR: {
     alias: 'MapReduce',
