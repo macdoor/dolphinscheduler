@@ -32,7 +32,7 @@ public class FlinkSqlGatewayTaskChannelFactory implements TaskChannelFactory {
 
     @Override
     public String getName() {
-        return "FLINK_SQLGATEWAY";
+        return "FLINK_SGW";
     }
 }
 

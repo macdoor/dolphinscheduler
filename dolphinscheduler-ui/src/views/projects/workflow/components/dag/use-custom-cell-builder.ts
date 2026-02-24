@@ -96,7 +96,7 @@ export function useCustomCellBuilder() {
             import.meta.env.BASE_URL
           }images/task-icons/${(
             (type !== ('FLINK_STREAM' as TaskType) &&
-            type !== ('FLINK_SQLGATEWAY' as TaskType))
+            type !== ('FLINK_SGW' as TaskType))
             ? type
             : 'FLINK'
           ).toLocaleLowerCase()}.png`

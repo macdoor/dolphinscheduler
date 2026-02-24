@@ -99,7 +99,7 @@ export function useCellActive(options: Options) {
     if (isHover || isSelected) {
       img = `${import.meta.env.BASE_URL}images/task-icons/${(
         (node.data.taskType !== 'FLINK_STREAM' &&
-        node.data.taskType !== 'FLINK_SQLGATEWAY')
+        node.data.taskType !== 'FLINK_SGW')
         ? node.data.taskType
         : 'FLINK'
       ).toLocaleLowerCase()}_hover.png`
@@ -113,7 +113,7 @@ export function useCellActive(options: Options) {
     } else {
       img = `${import.meta.env.BASE_URL}images/task-icons/${(
         (node.data.taskType !== 'FLINK_STREAM' &&
-        node.data.taskType !== 'FLINK_SQLGATEWAY' )
+        node.data.taskType !== 'FLINK_SGW' )
         ? node.data.taskType
         : 'FLINK'
       ).toLocaleLowerCase()}.png`

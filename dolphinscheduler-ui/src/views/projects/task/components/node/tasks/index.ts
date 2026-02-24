@@ -90,5 +90,5 @@ export default {
   DATA_FACTORY: useDataFactory,
   REMOTESHELL: useRemoteShell,
   ALIYUN_SERVERLESS_SPARK: useAliyunServerlessSpark,
-  FLINK_SQLGATEWAY: useFlinkSqlGateway
+  FLINK_SGW: useFlinkSqlGateway
 }
