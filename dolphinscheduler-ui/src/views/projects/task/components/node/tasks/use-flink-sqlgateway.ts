@@ -6,7 +6,7 @@ export function useFlinkSqlGateway(params: any) {
   const { projectCode, from = 0, readonly, data } = params
 
   const model = reactive<INodeData>({
-    taskType: 'FLINK_SQLGATEWAY',
+    taskType: 'FLINK_SGW',
     name: '',
     flag: 'YES',
     description: '',
@@ -20,7 +20,7 @@ export function useFlinkSqlGateway(params: any) {
     timeout: 30,
     timeoutNotifyStrategy: ['WARN'],
 
-    // --- FLINK_SQLGATEWAY custom fields ---
+    // --- FLINK_SGW custom fields ---
     flinkJdbcUrl: 'jdbc:flink://host:port',
     rawScriptType: 'FILE',
     initScriptType: 'FILE',

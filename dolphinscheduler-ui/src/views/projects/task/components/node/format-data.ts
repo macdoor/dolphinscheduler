@@ -90,7 +90,7 @@ export function formatParams(data: INodeData): {
     taskParams.taskManager = data.taskManager
     taskParams.parallelism = data.parallelism
   }
-  if (data.taskType === 'FLINK_SQLGATEWAY') {
+  if (data.taskType === 'FLINK_SGW') {
     taskParams.flinkJdbcUrl = data.flinkJdbcUrl
     taskParams.statementSeparator = data.statementSeparator
     taskParams.maxPrintRows = data.maxPrintRows
