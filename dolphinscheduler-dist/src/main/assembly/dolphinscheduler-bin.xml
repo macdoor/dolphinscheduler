@@ -46,35 +46,53 @@
             <outputDirectory>worker-server</outputDirectory>
         </fileSet>
 
-        <!-- plugins -->
+        <!-- plugins: alert-plugins -->
         <fileSet>
             <directory>${basedir}/../dolphinscheduler-alert/dolphinscheduler-alert-plugins</directory>
             <includes>
-                <include>dolphinscheduler-alert-*/target/dolphinscheduler-alert-*-shade.jar</include>
+                <include>dolphinscheduler-alert-http/target/dolphinscheduler-alert-http-*-shade.jar</include>
+                <include>dolphinscheduler-alert-prometheus/target/dolphinscheduler-alert-prometheus-*-shade.jar</include>
             </includes>
             <outputDirectory>plugins/alert-plugins</outputDirectory>
         </fileSet>
 
+        <!-- plugins: datasource-plugins -->
         <fileSet>
             <directory>${basedir}/../dolphinscheduler-datasource-plugin</directory>
             <includes>
-                <include>dolphinscheduler-datasource-*/target/dolphinscheduler-datasource-*-shade.jar</include>
+                <include>dolphinscheduler-datasource-k8s/target/dolphinscheduler-datasource-k8s-*-shade.jar</include>
+                <include>dolphinscheduler-datasource-mysql/target/dolphinscheduler-datasource-mysql-*-shade.jar</include>
+                <include>dolphinscheduler-datasource-postgresql/target/dolphinscheduler-datasource-postgresql-*-shade.jar</include>
+                <include>dolphinscheduler-datasource-ssh/target/dolphinscheduler-datasource-ssh-*-shade.jar</include>
+                <include>dolphinscheduler-datasource-starrocks/target/dolphinscheduler-datasource-starrocks-*-shade.jar</include>
             </includes>
             <outputDirectory>plugins/datasource-plugins</outputDirectory>
         </fileSet>
 
+        <!-- plugins: task-plugins -->
         <fileSet>
             <directory>${basedir}/../dolphinscheduler-task-plugin</directory>
             <includes>
-                <include>dolphinscheduler-task-*/target/dolphinscheduler-task-*-shade.jar</include>
+                <include>dolphinscheduler-task-flink/target/dolphinscheduler-task-flink-*-shade.jar</include>
+                <include>dolphinscheduler-task-flink-stream/target/dolphinscheduler-task-flink-stream-*-shade.jar</include>
+                <include>dolphinscheduler-task-flink-sqlgateway/target/dolphinscheduler-task-flink-sqlgateway-*-shade.jar</include>
+                <include>dolphinscheduler-task-http/target/dolphinscheduler-task-http-*-shade.jar</include>
+                <include>dolphinscheduler-task-grpc/target/dolphinscheduler-task-grpc-*-shade.jar</include>
+                <include>dolphinscheduler-task-java/target/dolphinscheduler-task-java-*-shade.jar</include>
+                <include>dolphinscheduler-task-k8s/target/dolphinscheduler-task-k8s-*-shade.jar</include>
+                <include>dolphinscheduler-task-linkis/target/dolphinscheduler-task-linkis-*-shade.jar</include>
+                <include>dolphinscheduler-task-seatunnel/target/dolphinscheduler-task-seatunnel-*-shade.jar</include>
+                <include>dolphinscheduler-task-shell/target/dolphinscheduler-task-shell-*-shade.jar</include>
+                <include>dolphinscheduler-task-sql/target/dolphinscheduler-task-sql-*-shade.jar</include>
             </includes>
             <outputDirectory>plugins/task-plugins</outputDirectory>
         </fileSet>
 
+        <!-- plugins: storage-plugins -->
         <fileSet>
             <directory>${basedir}/../dolphinscheduler-storage-plugin</directory>
             <includes>
-                <include>dolphinscheduler-storage-*/target/dolphinscheduler-storage-*-shade.jar</include>
+                <include>dolphinscheduler-storage-s3/target/dolphinscheduler-storage-s3-*-shade.jar</include>
             </includes>
             <outputDirectory>plugins/storage-plugins</outputDirectory>
         </fileSet>
