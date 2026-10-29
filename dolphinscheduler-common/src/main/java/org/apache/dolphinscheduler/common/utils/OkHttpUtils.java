@@ -20,8 +20,6 @@ package org.apache.dolphinscheduler.common.utils;
 import org.apache.dolphinscheduler.common.model.OkHttpRequestHeaders;
 import org.apache.dolphinscheduler.common.model.OkHttpResponse;
 
-import org.apache.http.HttpStatus;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -205,7 +203,7 @@ public class OkHttpUtils {
                                               int connectTimeout,
                                               int writeTimeout,
                                               int readTimeout) throws IOException {
-        return put(url, okHttpRequestHeaders, requestBodyMap,
+        return put(url, okHttpRequestHeaders, null, requestBodyMap,
                 connectTimeout, writeTimeout, readTimeout, false);
     }
 
@@ -225,8 +223,51 @@ public class OkHttpUtils {
                                               int writeTimeout,
                                               int readTimeout,
                                               boolean keepAlive) throws IOException {
+        return put(url, okHttpRequestHeaders, null, requestBodyMap,
+                connectTimeout, writeTimeout, readTimeout, keepAlive);
+    }
+
+    /**
+     * http put request
+     * @param requestParamsMap the request parameters appended to the url, same as the GET path
+     * @param connectTimeout connect timeout in milliseconds
+     * @param writeTimeout write timeout in milliseconds
+     * @param readTimeout read timeout in milliseconds
+     * @return OkHttpResponse
+     * @throws RuntimeException
+     */
+    public static @NonNull OkHttpResponse put(@NonNull String url,
+                                              @Nullable OkHttpRequestHeaders okHttpRequestHeaders,
+                                              @Nullable Map<String, Object> requestParamsMap,
+                                              @Nullable Map<String, Object> requestBodyMap,
+                                              int connectTimeout,
+                                              int writeTimeout,
+                                              int readTimeout) throws IOException {
+        return put(url, okHttpRequestHeaders, requestParamsMap, requestBodyMap,
+                connectTimeout, writeTimeout, readTimeout, false);
+    }
+
+    /**
+     * http put request
+     * @param requestParamsMap the request parameters appended to the url, same as the GET path
+     * @param connectTimeout connect timeout in milliseconds
+     * @param writeTimeout write timeout in milliseconds
+     * @param readTimeout read timeout in milliseconds
+     * @param keepAlive whether to enable TCP keepalive (SO_KEEPALIVE) on the socket
+     * @return OkHttpResponse
+     * @throws RuntimeException
+     */
+    public static @NonNull OkHttpResponse put(@NonNull String url,
+                                              @Nullable OkHttpRequestHeaders okHttpRequestHeaders,
+                                              @Nullable Map<String, Object> requestParamsMap,
+                                              @Nullable Map<String, Object> requestBodyMap,
+                                              int connectTimeout,
+                                              int writeTimeout,
+                                              int readTimeout,
+                                              boolean keepAlive) throws IOException {
         OkHttpClient client = getHttpClient(connectTimeout, writeTimeout, readTimeout, keepAlive);
-        Request.Builder requestBuilder = new Request.Builder().url(url);
+        String finalUrl = addUrlParams(requestParamsMap, url);
+        Request.Builder requestBuilder = new Request.Builder().url(finalUrl);
         addHeader(okHttpRequestHeaders.getHeaders(), requestBuilder);
         if (requestBodyMap != null) {
             requestBuilder = requestBuilder.put(RequestBody.create(
@@ -250,10 +291,27 @@ public class OkHttpUtils {
      */
     public static @NonNull OkHttpResponse delete(@NonNull String url,
                                                  @Nullable OkHttpRequestHeaders okHttpRequestHeaders,
+                                                 @Nullable Map<String, Object> requestParams,
                                                  int connectTimeout,
                                                  int writeTimeout,
                                                  int readTimeout) throws IOException {
-        return delete(url, okHttpRequestHeaders, connectTimeout, writeTimeout, readTimeout, false);
+        return delete(url, okHttpRequestHeaders, requestParams, connectTimeout, writeTimeout, readTimeout, false);
+    }
+
+    /**
+     * http delete request
+     * @param connectTimeout connect timeout in milliseconds
+     * @param writeTimeout write timeout in milliseconds
+     * @param readTimeout read timeout in milliseconds
+     * @return OkHttpResponse
+     * @throws RuntimeException
+     */
+    public static @NonNull OkHttpResponse delete(@NonNull String url,
+                                                 @Nullable OkHttpRequestHeaders okHttpRequestHeaders,
+                                                 int connectTimeout,
+                                                 int writeTimeout,
+                                                 int readTimeout) throws IOException {
+        return delete(url, okHttpRequestHeaders, null, connectTimeout, writeTimeout, readTimeout, false);
     }
 
     /**
@@ -271,8 +329,29 @@ public class OkHttpUtils {
                                                  int writeTimeout,
                                                  int readTimeout,
                                                  boolean keepAlive) throws IOException {
+        return delete(url, okHttpRequestHeaders, null, connectTimeout, writeTimeout, readTimeout, keepAlive);
+    }
+
+    /**
+     * http delete request
+     * @param requestParams the request parameters appended to the url, same as the GET path
+     * @param connectTimeout connect timeout in milliseconds
+     * @param writeTimeout write timeout in milliseconds
+     * @param readTimeout read timeout in milliseconds
+     * @param keepAlive whether to enable TCP keepalive (SO_KEEPALIVE) on the socket
+     * @return OkHttpResponse
+     * @throws RuntimeException
+     */
+    public static @NonNull OkHttpResponse delete(@NonNull String url,
+                                                 @Nullable OkHttpRequestHeaders okHttpRequestHeaders,
+                                                 @Nullable Map<String, Object> requestParams,
+                                                 int connectTimeout,
+                                                 int writeTimeout,
+                                                 int readTimeout,
+                                                 boolean keepAlive) throws IOException {
         OkHttpClient client = getHttpClient(connectTimeout, writeTimeout, readTimeout, keepAlive);
-        Request.Builder requestBuilder = new Request.Builder().url(url);
+        String finalUrl = addUrlParams(requestParams, url);
+        Request.Builder requestBuilder = new Request.Builder().url(finalUrl);
         addHeader(okHttpRequestHeaders.getHeaders(), requestBuilder);
         requestBuilder = requestBuilder.delete();
         try (Response response = client.newCall(requestBuilder.build()).execute()) {
@@ -305,11 +384,10 @@ public class OkHttpUtils {
         headers.forEach(requestBuilder::addHeader);
     }
 
-    private static String getResponseBody(@NonNull Response response) throws IOException {
-        if (response.code() != HttpStatus.SC_OK || response.body() == null) {
-            return String.format("Request execute failed, httpCode: %s, httpBody: %s",
-                    response.code(),
-                    response.body());
+    @VisibleForTesting
+    static String getResponseBody(@NonNull Response response) throws IOException {
+        if (response.body() == null) {
+            return "";
         }
         return response.body().string();
     }
